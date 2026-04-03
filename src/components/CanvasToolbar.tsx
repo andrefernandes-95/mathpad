@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
-import { Pencil, Eraser } from 'lucide-react-native';
+import { Eraser } from 'lucide-react-native';
 
 interface Props {
   color: string;
@@ -12,14 +12,11 @@ interface Props {
 }
 
 const COLORS = [
-  { id: 'black', hex: '#000000' },
-  { id: 'vista_blue', hex: '#002a4e' },
-  { id: 'vista_cyan', hex: '#0ea5e9' },
-  { id: 'vista_green', hex: '#16a34a' },
-  { id: 'vista_red', hex: '#dc2626' },
+  { id: 'black', hex: '#0f172a' },
+  { id: 'red', hex: '#ef4444' },
 ];
 
-const WIDTHS = [2, 4, 8, 12];
+const WIDTHS = [3, 6, 12, 18];
 
 export const CanvasToolbar: React.FC<Props> = ({
   color,
@@ -30,6 +27,7 @@ export const CanvasToolbar: React.FC<Props> = ({
   return (
     <View style={styles.container}>
       <View style={styles.glossyOverlay} />
+      
       <View style={styles.section}>
         <Text style={styles.label}>Ink Color</Text>
         <View style={styles.row}>
@@ -46,7 +44,9 @@ export const CanvasToolbar: React.FC<Props> = ({
               <View style={styles.glossyOverlayInner} />
             </TouchableOpacity>
           ))}
+          
           <View style={styles.toolDivider} />
+          
           <TouchableOpacity
             style={[
               styles.toolButton,
@@ -54,8 +54,8 @@ export const CanvasToolbar: React.FC<Props> = ({
             ]}
             onPress={() => onColorChange('#ffffff')}
           >
-             <View style={styles.glossyOverlayInner} />
-            <Eraser size={18} color={color === '#ffffff' ? '#0ea5e9' : '#475569'} />
+            <View style={styles.glossyOverlayInner} />
+            <Eraser size={18} color={color === '#ffffff' ? '#0ea5e9' : '#64748b'} />
           </TouchableOpacity>
         </View>
       </View>
@@ -65,7 +65,7 @@ export const CanvasToolbar: React.FC<Props> = ({
       <View style={styles.section}>
         <Text style={styles.label}>Pen Size</Text>
         <View style={styles.row}>
-           {WIDTHS.map((w) => (
+          {WIDTHS.map((w) => (
             <TouchableOpacity
               key={w}
               style={[
@@ -75,7 +75,17 @@ export const CanvasToolbar: React.FC<Props> = ({
               onPress={() => onWidthChange(w)}
             >
               <View style={styles.glossyOverlayInner} />
-              <View style={[styles.sizeDot, { width: w + 2, height: w + 2, borderRadius: (w + 2) / 2 }]} />
+              <View 
+                style={[
+                  styles.sizeDot, 
+                  { 
+                    width: w + 2, 
+                    height: w + 2, 
+                    borderRadius: (w + 2) / 2,
+                    backgroundColor: color === '#ffffff' ? '#0ea5e9' : color
+                  }
+                ]} 
+              />
             </TouchableOpacity>
           ))}
         </View>
@@ -87,19 +97,20 @@ export const CanvasToolbar: React.FC<Props> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.7)', // Aero Glass effect
-    padding: 12,
-    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)', // Aero Glass effect
+    padding: 10,
+    paddingHorizontal: 15,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
+    borderColor: 'rgba(255, 255, 255, 0.6)',
     alignItems: 'center',
-    gap: 16,
+    justifyContent: 'space-between',
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowRadius: 5,
+    elevation: 4,
   },
   glossyOverlay: {
     position: 'absolute',
@@ -126,32 +137,32 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 9,
     fontWeight: '900',
-    color: '#64748b',
+    color: '#002a4e',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   colorButton: {
-    width: 26,
-    height: 26,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.2)',
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0,0,0,0.1)',
     overflow: 'hidden',
   },
   activeColor: {
     borderColor: '#0ea5e9',
-    borderWidth: 3,
+    borderWidth: 2.5,
     transform: [{ scale: 1.1 }],
   },
   toolButton: {
     width: 32,
     height: 32,
-    borderRadius: 6,
+    borderRadius: 8,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
@@ -160,7 +171,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   activeTool: {
-    backgroundColor: '#e0f2fe',
+    backgroundColor: '#f0f9ff',
     borderColor: '#0ea5e9',
     borderWidth: 2,
   },
@@ -172,13 +183,13 @@ const styles = StyleSheet.create({
   },
   divider: {
     width: 1,
-    height: 35,
+    height: 30,
     backgroundColor: 'rgba(0,0,0,0.05)',
   },
   sizeButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 6,
+    width: 34,
+    height: 34,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#fff',
@@ -187,11 +198,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   activeSize: {
-    backgroundColor: '#e0f2fe',
+    backgroundColor: '#f0f9ff',
     borderColor: '#0ea5e9',
     borderWidth: 2,
   },
   sizeDot: {
-    backgroundColor: '#334155',
+    // Background color is handled inline to reflect selected color
   },
 });

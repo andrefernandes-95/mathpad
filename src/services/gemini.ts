@@ -65,11 +65,9 @@ export class GeminiService {
             ],
           },
         ],
-        generationConfig: {
+        config: {
           maxOutputTokens: 2048,
           temperature: 0.1,
-          // Gemini 3 specific: High resolution for OCR precision
-          mediaResolution: "high",
         },
       });
 

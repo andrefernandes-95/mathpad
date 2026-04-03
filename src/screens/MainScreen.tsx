@@ -79,33 +79,20 @@ export const MainScreen = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* Vista Aero Header */}
-      <View style={styles.header}>
-        <View style={styles.glossyOverlay} />
-        <View style={styles.headerContent}>
-          <View>
-            <View style={styles.logoRow}>
-              <Text style={styles.title}>MathPad</Text>
-              <Sparkles color="#fff" size={16} style={styles.sparkle} />
-            </View>
-            <Text style={styles.subtitle}>Windows Vista Edition</Text>
-          </View>
-          <TouchableOpacity
-            style={[styles.analyzeButton, (isAnalyzing || !exerciseBase64 || !gemini) && styles.disabledButton]}
-            onPress={handleAnalyze}
-            disabled={isAnalyzing || !exerciseBase64 || !gemini}
-          >
-            <View style={styles.glossyOverlay} />
-            {isAnalyzing ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <>
-                <Brain color="#fff" size={18} />
-                <Text style={styles.analyzeButtonText}>ANALYZE</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
+      {/* Tabs at the Top */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'exercise' && styles.activeTab]}
+          onPress={() => setActiveTab('exercise')}
+        >
+          <Text style={[styles.tabText, activeTab === 'exercise' && styles.activeTabText]}>EXERCISE</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'workspace' && styles.activeTab]}
+          onPress={() => setActiveTab('workspace')}
+        >
+          <Text style={[styles.tabText, activeTab === 'workspace' && styles.activeTabText]}>WORKSPACE</Text>
+        </TouchableOpacity>
       </View>
 
       {/* API Key Warning */}
@@ -114,24 +101,6 @@ export const MainScreen = () => {
           <Text style={styles.warningText}>⚠️ API Key missing in MainScreen.tsx</Text>
         </View>
       )}
-
-      {/* Tabs Container */}
-      <View style={styles.tabsContainer}>
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'exercise' && styles.activeTab]}
-          onPress={() => setActiveTab('exercise')}
-        >
-          {activeTab === 'exercise' && <View style={styles.glossyOverlay} />}
-          <Text style={[styles.tabText, activeTab === 'exercise' && styles.activeTabText]}>EXERCISE</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'workspace' && styles.activeTab]}
-          onPress={() => setActiveTab('workspace')}
-        >
-          {activeTab === 'workspace' && <View style={styles.glossyOverlay} />}
-          <Text style={[styles.tabText, activeTab === 'workspace' && styles.activeTabText]}>WORKSPACE</Text>
-        </TouchableOpacity>
-      </View>
 
       <View style={styles.content}>
         {activeTab === 'exercise' ? (
@@ -152,13 +121,33 @@ export const MainScreen = () => {
         ) : (
           <View style={styles.workspaceWrapper}>
             <View style={styles.glassToolbar}>
-              <View style={styles.workspaceHeader}>
-                <Text style={styles.workspaceLabel}>Handwriting Pad</Text>
-                <View style={styles.canvasActions}>
-                  <TouchableOpacity style={styles.actionButton} onPress={() => canvasRef.current?.undo()}>
+              <View style={styles.handwritingHeader}>
+                <View style={styles.handwritingTitleWrapper}>
+                  <Text style={styles.handwritingTitle}>HANDWRITING PAD</Text>
+                  <Sparkles size={14} color="#0369a1" style={{ marginLeft: 5 }} />
+                </View>
+                
+                <View style={styles.actionRow}>
+                  <TouchableOpacity 
+                    style={[styles.analyzeSmallButton, (isAnalyzing || !exerciseBase64 || !gemini) && styles.disabledButton]} 
+                    onPress={handleAnalyze}
+                    disabled={isAnalyzing || !exerciseBase64 || !gemini}
+                  >
+                    <View style={styles.glossyOverlayInner} />
+                    {isAnalyzing ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <>
+                        <Brain color="#fff" size={16} />
+                        <Text style={styles.analyzeSmallText}>ANALYZE</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={styles.toolIconBtn} onPress={() => canvasRef.current?.undo()}>
                     <Undo2 color="#334155" size={18} />
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.actionButton, styles.clearButton]} onPress={() => canvasRef.current?.clear()}>
+                  <TouchableOpacity style={[styles.toolIconBtn, styles.clearBtn]} onPress={() => canvasRef.current?.clear()}>
                     <Eraser color="#ef4444" size={18} />
                   </TouchableOpacity>
                 </View>
@@ -247,22 +236,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#002a4e', // Deep Vista Blue
   },
-  header: {
-    height: 70,
-    backgroundColor: '#0c4a6e',
-    overflow: 'hidden',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.3)',
-    elevation: 10,
-  },
-  headerContent: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    zIndex: 2,
-  },
   glossyOverlay: {
     position: 'absolute',
     top: 0,
@@ -272,91 +245,56 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     zIndex: 1,
   },
-  sparkle: {
-    marginTop: -4,
+  glossyOverlayInner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
-  logoRow: {
+  tabContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#fff',
-    letterSpacing: -0.5,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
-  subtitle: {
-    fontSize: 10,
-    color: '#bae6fd',
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  analyzeButton: {
-    backgroundColor: '#0ea5e9',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.4)',
-    overflow: 'hidden',
-  },
-  disabledButton: {
-    backgroundColor: '#64748b',
-    opacity: 0.6,
-  },
-  analyzeButtonText: {
-    color: '#fff',
-    fontWeight: '900',
-    fontSize: 12,
-    letterSpacing: 1,
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 10,
+    paddingHorizontal: 15,
+    backgroundColor: '#002a4e', // Deep Vista Blue
     paddingTop: 10,
-    gap: 5,
-    backgroundColor: 'rgba(0,0,0,0.1)',
   },
-  tabButton: {
+  tab: {
     paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 25,
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
+    marginRight: 5,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.1)',
     borderBottomWidth: 0,
-    overflow: 'hidden',
   },
   activeTab: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: 'rgba(255,255,255,0.92)',
     borderBottomWidth: 0,
+    zIndex: 2, // Ensure it covers the top border of the content area
   },
   tabText: {
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 11,
+    fontWeight: '900',
     color: '#bae6fd',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
   activeTabText: {
-    color: '#0369a1',
+    color: '#002a4e',
   },
   content: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: 'rgba(255,255,255,0.92)',
     marginHorizontal: 10,
-    marginBottom: 0, // Fits nicely to the bottom
-    borderTopWidth: 0,
+    marginTop: -1, // Pull up to meet the tabs
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 10,
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
   },
   workspaceWrapper: {
     flex: 1,
@@ -374,17 +312,70 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  workspaceHeader: {
+  handwritingHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
+    flexWrap: 'nowrap',
+    gap: 8,
   },
-  workspaceLabel: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#334155',
-    textTransform: 'uppercase',
+  handwritingTitleWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1, // Allow text to shrink if screen is tiny
+  },
+  handwritingTitle: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#002a4e',
+    letterSpacing: 0.5,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  analyzeSmallButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0ea5e9',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#0284c7',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  disabledButton: {
+    backgroundColor: '#94a3b8',
+    opacity: 0.6,
+  },
+  analyzeSmallText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 10,
+    marginLeft: 4,
+    letterSpacing: 0.5,
+  },
+  toolIconBtn: {
+    padding: 6,
+    backgroundColor: '#fff',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    marginLeft: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+  },
+  clearBtn: {
+    borderColor: '#fca5a5',
   },
   canvasContainer: {
     flex: 1,
@@ -499,19 +490,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#92400e',
     fontWeight: '700',
-  },
-  canvasActions: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  actionButton: {
-    padding: 6,
-    backgroundColor: '#fff',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-  },
-  clearButton: {
-    borderColor: '#fecaca',
   },
 });

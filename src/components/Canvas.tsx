@@ -1,5 +1,5 @@
 import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, ScrollView } from 'react-native';
 import {
   Canvas,
   Path,
@@ -8,7 +8,7 @@ import {
   SkPath,
 } from '@shopify/react-native-skia';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import { useSharedValue, useDerivedValue, runOnJS } from 'react-native-reanimated';
+import Animated, { useSharedValue, useDerivedValue, useAnimatedStyle, runOnJS } from 'react-native-reanimated';
 
 interface Stroke {
   path: SkPath;
@@ -27,14 +27,19 @@ interface Props {
   strokeWidth?: number;
 }
 
+const INITIAL_SIZE = 1200;
+const EXPANSION_STEP = 500;
+
 const MathCanvas = forwardRef<CanvasHandle, Props>(({
   strokeColor = '#0f172a',
   strokeWidth = 4
 }, ref) => {
   const [paths, setPaths] = useState<Stroke[]>([]);
   
-  // We use a points array for the current stroke to ensure absolute reactivity.
-  // Mutating SkPath objects in place sometimes fails to trigger re-renders on Web.
+  // Dynamic Canvas Dimensions
+  const canvasWidth = useSharedValue(INITIAL_SIZE);
+  const canvasHeight = useSharedValue(INITIAL_SIZE);
+
   const currentPoints = useSharedValue<{ x: number; y: number }[]>([]);
   const colorShared = useSharedValue(strokeColor);
   const widthShared = useSharedValue(strokeWidth);
@@ -51,12 +56,15 @@ const MathCanvas = forwardRef<CanvasHandle, Props>(({
     clear: () => {
       setPaths([]);
       currentPoints.value = [];
+      canvasWidth.value = INITIAL_SIZE;
+      canvasHeight.value = INITIAL_SIZE;
     },
     undo: () => {
       setPaths((prev) => prev.slice(0, -1));
     },
     getBase64: async () => {
       if (!canvasRef.current) return undefined;
+      // Capture the entire expanded canvas
       const image = canvasRef.current.makeImageSnapshot();
       if (image) {
         return image.encodeToBase64();
@@ -82,6 +90,18 @@ const MathCanvas = forwardRef<CanvasHandle, Props>(({
     });
   };
 
+  const checkBoundaries = (x: number, y: number) => {
+    'worklet';
+    // Expand Width
+    if (x > canvasWidth.value - 150) {
+      canvasWidth.value += EXPANSION_STEP;
+    }
+    // Expand Height
+    if (y > canvasHeight.value - 150) {
+      canvasHeight.value += EXPANSION_STEP;
+    }
+  };
+
   const panGesture = Gesture.Pan()
     .onStart((g) => {
       if (colorShared.value === '#ffffff') {
@@ -91,6 +111,7 @@ const MathCanvas = forwardRef<CanvasHandle, Props>(({
       }
     })
     .onUpdate((g) => {
+      checkBoundaries(g.x, g.y);
       if (colorShared.value === '#ffffff') {
         runOnJS(erasePathAt)(g.x, g.y);
       } else {
@@ -98,7 +119,6 @@ const MathCanvas = forwardRef<CanvasHandle, Props>(({
       }
     })
     .onEnd(() => {
-      console.log('Pan ended');
       if (colorShared.value !== '#ffffff' && currentPoints.value.length > 1) {
         const path = Skia.Path.Make();
         path.moveTo(currentPoints.value[0].x, currentPoints.value[0].y);
@@ -110,34 +130,54 @@ const MathCanvas = forwardRef<CanvasHandle, Props>(({
       currentPoints.value = [];
     })
     .minDistance(0)
+    .activeOffsetX([-1, 1])
+    .activeOffsetY([-1, 1])
     .activeCursor('crosshair');
 
+  const canvasStyle = useAnimatedStyle(() => ({
+    width: canvasWidth.value,
+    height: canvasHeight.value,
+  }));
+
   return (
-    <View style={[styles.container, { touchAction: 'none' } as any]}>
-      <GestureDetector gesture={panGesture}>
-        <View style={styles.canvasContainer}>
-          <Canvas ref={canvasRef} style={styles.canvas}>
-            {/* Render past strokes */}
-            {paths.map((p, index) => (
-              <Path
-                key={index}
-                path={p.path}
-                color={p.color}
-                style="stroke"
-                strokeWidth={p.width}
-                strokeCap="round"
-                strokeJoin="round"
-              />
-            ))}
-            {/* Render current stroke */}
-            <CurrentStroke 
-              currentPoints={currentPoints} 
-              colorShared={colorShared} 
-              widthShared={widthShared}
-            />
-          </Canvas>
-        </View>
-      </GestureDetector>
+    <View style={styles.container}>
+      <ScrollView 
+        horizontal 
+        style={styles.horizontalScroll} 
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsHorizontalScrollIndicator={true}
+      >
+        <ScrollView 
+          style={styles.verticalScroll} 
+          contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={true}
+        >
+          <GestureDetector gesture={panGesture}>
+            <Animated.View style={[canvasStyle, { touchAction: 'none' } as any]}>
+              <Canvas ref={canvasRef} style={{ flex: 1 }}>
+                {/* Render past strokes */}
+                {paths.map((p, index) => (
+                  <Path
+                    key={index}
+                    path={p.path}
+                    color={p.color}
+                    style="stroke"
+                    strokeWidth={p.width}
+                    strokeCap="round"
+                    strokeJoin="round"
+                  />
+                ))}
+                {/* Render current stroke */}
+                <CurrentStroke 
+                  currentPoints={currentPoints} 
+                  colorShared={colorShared} 
+                  widthShared={widthShared}
+                />
+              </Canvas>
+            </Animated.View>
+          </GestureDetector>
+        </ScrollView>
+      </ScrollView>
     </View>
   );
 });
@@ -175,15 +215,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
-    borderRadius: 12,
+    borderRadius: 8,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
   },
-  canvasContainer: {
+  horizontalScroll: {
     flex: 1,
   },
-  canvas: {
+  verticalScroll: {
     flex: 1,
   },
 });
