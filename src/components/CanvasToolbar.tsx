@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
-import { Pencil, Eraser, Minus, Plus } from 'lucide-react-native';
+import { Pencil, Eraser } from 'lucide-react-native';
 
 interface Props {
   color: string;
@@ -12,13 +12,14 @@ interface Props {
 }
 
 const COLORS = [
-  { id: 'black', hex: '#0f172a' },
-  { id: 'blue', hex: '#2563eb' },
-  { id: 'red', hex: '#dc2626' },
-  { id: 'green', hex: '#16a34a' },
+  { id: 'black', hex: '#000000' },
+  { id: 'vista_blue', hex: '#002a4e' },
+  { id: 'vista_cyan', hex: '#0ea5e9' },
+  { id: 'vista_green', hex: '#16a34a' },
+  { id: 'vista_red', hex: '#dc2626' },
 ];
 
-const WIDTHS = [2, 4, 6, 8];
+const WIDTHS = [2, 4, 8, 12];
 
 export const CanvasToolbar: React.FC<Props> = ({
   color,
@@ -28,8 +29,9 @@ export const CanvasToolbar: React.FC<Props> = ({
 }) => {
   return (
     <View style={styles.container}>
+      <View style={styles.glossyOverlay} />
       <View style={styles.section}>
-        <Text style={styles.label}>Colors</Text>
+        <Text style={styles.label}>Ink Color</Text>
         <View style={styles.row}>
           {COLORS.map((c) => (
             <TouchableOpacity
@@ -40,16 +42,20 @@ export const CanvasToolbar: React.FC<Props> = ({
                 color === c.hex && styles.activeColor,
               ]}
               onPress={() => onColorChange(c.hex)}
-            />
+            >
+              <View style={styles.glossyOverlayInner} />
+            </TouchableOpacity>
           ))}
+          <View style={styles.toolDivider} />
           <TouchableOpacity
             style={[
               styles.toolButton,
-              color === 'eraser' && styles.activeTool,
+              color === '#ffffff' && styles.activeTool,
             ]}
-            onPress={() => onColorChange('#ffffff')} // Eraser is just white for now
+            onPress={() => onColorChange('#ffffff')}
           >
-            <Eraser size={18} color={color === '#ffffff' ? '#6366f1' : '#64748b'} />
+             <View style={styles.glossyOverlayInner} />
+            <Eraser size={18} color={color === '#ffffff' ? '#0ea5e9' : '#475569'} />
           </TouchableOpacity>
         </View>
       </View>
@@ -57,7 +63,7 @@ export const CanvasToolbar: React.FC<Props> = ({
       <View style={styles.divider} />
 
       <View style={styles.section}>
-        <Text style={styles.label}>Size</Text>
+        <Text style={styles.label}>Pen Size</Text>
         <View style={styles.row}>
            {WIDTHS.map((w) => (
             <TouchableOpacity
@@ -68,6 +74,7 @@ export const CanvasToolbar: React.FC<Props> = ({
               ]}
               onPress={() => onWidthChange(w)}
             >
+              <View style={styles.glossyOverlayInner} />
               <View style={[styles.sizeDot, { width: w + 2, height: w + 2, borderRadius: (w + 2) / 2 }]} />
             </TouchableOpacity>
           ))}
@@ -80,72 +87,109 @@ export const CanvasToolbar: React.FC<Props> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)', // Aero Glass effect
     padding: 12,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
     alignItems: 'center',
     gap: 16,
-    marginBottom: 12,
-    // Shadow for premium feel
+    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
     shadowRadius: 10,
-    elevation: 2,
+    elevation: 5,
+  },
+  glossyOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '45%',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    zIndex: 1,
+  },
+  glossyOverlayInner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '40%',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    zIndex: 2,
   },
   section: {
-    gap: 6,
+    gap: 4,
+    zIndex: 2,
   },
   label: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#94a3b8',
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#64748b',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   colorButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    width: 26,
+    height: 26,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.2)',
+    overflow: 'hidden',
   },
   activeColor: {
-    borderColor: '#6366f1',
+    borderColor: '#0ea5e9',
+    borderWidth: 3,
     transform: [{ scale: 1.1 }],
   },
   toolButton: {
-    padding: 6,
-    borderRadius: 8,
-    backgroundColor: '#f8fafc',
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+    overflow: 'hidden',
   },
   activeTool: {
-    backgroundColor: '#eef2ff',
+    backgroundColor: '#e0f2fe',
+    borderColor: '#0ea5e9',
+    borderWidth: 2,
+  },
+  toolDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    marginHorizontal: 2,
   },
   divider: {
     width: 1,
-    height: 30,
-    backgroundColor: '#f1f5f9',
+    height: 35,
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
   sizeButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 30,
+    height: 30,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+    overflow: 'hidden',
   },
   activeSize: {
-    backgroundColor: '#eef2ff',
-    borderWidth: 1,
-    borderColor: '#6366f1',
+    backgroundColor: '#e0f2fe',
+    borderColor: '#0ea5e9',
+    borderWidth: 2,
   },
   sizeDot: {
     backgroundColor: '#334155',

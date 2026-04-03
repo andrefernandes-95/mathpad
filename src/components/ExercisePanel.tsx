@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Image, TouchableOpacity, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, Image, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, Image as ImageIcon, X, HelpCircle, RefreshCcw } from 'lucide-react-native';
+import { Camera, Image as ImageIcon, X, RefreshCcw } from 'lucide-react-native';
 
 interface Props {
   onImageSelected: (base64: string | null) => void;
@@ -38,55 +38,64 @@ export const ExercisePanel: React.FC<Props> = ({ onImageSelected, selectedImage 
 
   return (
     <View style={styles.container}>
+      <View style={styles.glossyOverlay} />
       {!selectedImage ? (
-        <View style={styles.emptyState}>
-          <View style={styles.iconCircle}>
-            <ImageIcon color="#6366f1" size={32} strokeWidth={1.5} />
+        <View style={styles.activeContent}>
+          <View style={styles.iconContainer}>
+            <ImageIcon color="#0ea5e9" size={40} strokeWidth={1} />
+            <View style={styles.glossyOverlayInner} />
           </View>
-          <Text style={styles.title}>Add Your Exercise</Text>
-          <Text style={styles.subtitle}>Upload a screenshot or photo of the math problem you want to solve.</Text>
+          <Text style={styles.title}>EXERCISE IMPORT</Text>
+          <Text style={styles.subtitle}>Select a problem to analyze with Gemini Vista AI.</Text>
           
           <View style={styles.buttonRow}>
             <TouchableOpacity 
-              style={[styles.button, styles.primaryButton]} 
+              style={[styles.vistaButton, styles.primaryVista]} 
               onPress={() => pickImage(true)}
+              disabled={loading}
             >
+              <View style={styles.glossyOverlayInner} />
               <Camera color="#fff" size={18} />
-              <Text style={styles.buttonText}>Camera</Text>
+              <Text style={styles.buttonText}>CAMERA</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.button, styles.secondaryButton]} 
+              style={[styles.vistaButton, styles.secondaryVista]} 
               onPress={() => pickImage(false)}
+              disabled={loading}
             >
-              <ImageIcon color="#475569" size={18} />
-              <Text style={styles.buttonTextSecondary}>Gallery</Text>
+              <View style={styles.glossyOverlayInner} />
+              <ImageIcon color="#0369a1" size={18} />
+              <Text style={[styles.buttonText, { color: '#0369a1' }]}>GALLERY</Text>
             </TouchableOpacity>
           </View>
+          {loading && <ActivityIndicator size="small" color="#0ea5e9" style={{ marginTop: 15 }} />}
         </View>
       ) : (
         <View style={styles.activeState}>
           <Image 
             source={{ uri: `data:image/jpeg;base64,${selectedImage}` }} 
             style={styles.previewImage} 
-            resizeMode="cover"
+            resizeMode="contain"
           />
           <View style={styles.overlay}>
              <TouchableOpacity 
               style={styles.iconButton} 
               onPress={() => pickImage(true)}
             >
-              <RefreshCcw color="#fff" size={16} />
+               <View style={styles.glossyOverlayInner} />
+               <RefreshCcw color="#fff" size={16} />
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.iconButton, styles.dangerButton]} 
               onPress={() => onImageSelected(null)}
             >
+               <View style={styles.glossyOverlayInner} />
               <X color="#fff" size={16} />
             </TouchableOpacity>
           </View>
           <View style={styles.imageLabel}>
-            <Text style={styles.imageLabelText}>Active Exercise</Text>
+            <Text style={styles.imageLabelText}>LOCKED FOR ANALYSIS</Text>
           </View>
         </View>
       )}
@@ -97,83 +106,101 @@ export const ExercisePanel: React.FC<Props> = ({ onImageSelected, selectedImage 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    height: 200,
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: '#e2e8f0',
+    height: 350,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    borderRadius: 0, // Fits card container
     overflow: 'hidden',
     justifyContent: 'center',
-    marginBottom: 20,
-    // Premium shadow
-    shadowColor: '#6366f1',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.05,
-    shadowRadius: 20,
-    elevation: 3,
+    position: 'relative',
   },
-  emptyState: {
+  glossyOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '40%',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    zIndex: 1,
+  },
+  glossyOverlayInner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '40%',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    zIndex: 2,
+  },
+  activeContent: {
     alignItems: 'center',
-    padding: 24,
+    padding: 30,
+    zIndex: 2,
   },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#f5f7ff',
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#1e293b',
-    letterSpacing: -0.5,
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#0369a1',
+    letterSpacing: 2,
   },
   subtitle: {
-    fontSize: 13,
-    color: '#64748b',
+    fontSize: 12,
+    color: '#475569',
     textAlign: 'center',
-    marginTop: 6,
-    marginBottom: 20,
-    lineHeight: 18,
+    marginTop: 8,
+    marginBottom: 30,
     paddingHorizontal: 20,
+    fontWeight: '600',
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 15,
   },
-  button: {
+  vistaButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  primaryButton: {
-    backgroundColor: '#6366f1',
-  },
-  secondaryButton: {
-    backgroundColor: '#f8fafc',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    gap: 10,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,0,0,0.1)',
+    overflow: 'hidden',
+    minWidth: 120,
+    justifyContent: 'center',
+  },
+  primaryVista: {
+    backgroundColor: '#0ea5e9',
+    borderColor: '#0284c7',
+  },
+  secondaryVista: {
+    backgroundColor: '#fff',
+    borderColor: '#cbd5e1',
   },
   buttonText: {
     color: '#fff',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  buttonTextSecondary: {
-    color: '#475569',
-    fontWeight: '700',
-    fontSize: 14,
+    fontWeight: '900',
+    fontSize: 12,
+    letterSpacing: 1,
   },
   activeState: {
     flex: 1,
-    position: 'relative',
+    backgroundColor: '#000',
   },
   previewImage: {
     width: '100%',
@@ -181,36 +208,38 @@ const styles = StyleSheet.create({
   },
   overlay: {
     position: 'absolute',
-    top: 12,
-    right: 12,
+    top: 20,
+    right: 20,
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
   },
   imageLabel: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    paddingVertical: 8,
+    backgroundColor: 'rgba(3, 105, 161, 0.8)',
+    paddingVertical: 10,
     alignItems: 'center',
   },
   imageLabelText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#6366f1',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#fff',
+    letterSpacing: 2,
   },
   iconButton: {
-    backgroundColor: 'rgba(15, 23, 42, 0.7)',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    backgroundColor: '#0369a1',
+    width: 40,
+    height: 40,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    overflow: 'hidden',
   },
   dangerButton: {
-    backgroundColor: 'rgba(239, 68, 68, 0.9)',
+    backgroundColor: '#dc2626',
   },
 });
