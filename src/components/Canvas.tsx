@@ -69,18 +69,37 @@ const MathCanvas = forwardRef<CanvasHandle, Props>(({
     setPaths((prev) => [...prev, { path, color, width }]);
   };
 
+  const erasePathAt = (x: number, y: number) => {
+    setPaths((prev) => {
+      const filtered = prev.filter((p) => {
+        const hitPath = p.path.copy();
+        const outlinedPath = hitPath.stroke({ width: p.width + 15 });
+        if (!outlinedPath) return true;
+        const isHit = outlinedPath.contains(x, y);
+        return !isHit;
+      });
+      return filtered;
+    });
+  };
+
   const panGesture = Gesture.Pan()
     .onStart((g) => {
-      console.log('Pan started at:', g.x, g.y);
-      currentPoints.value = [{ x: g.x, y: g.y }];
+      if (colorShared.value === '#ffffff') {
+        runOnJS(erasePathAt)(g.x, g.y);
+      } else {
+        currentPoints.value = [{ x: g.x, y: g.y }];
+      }
     })
     .onUpdate((g) => {
-      // Appending to the array triggers reactivity in useDerivedValue
-      currentPoints.value = [...currentPoints.value, { x: g.x, y: g.y }];
+      if (colorShared.value === '#ffffff') {
+        runOnJS(erasePathAt)(g.x, g.y);
+      } else {
+        currentPoints.value = [...currentPoints.value, { x: g.x, y: g.y }];
+      }
     })
     .onEnd(() => {
       console.log('Pan ended');
-      if (currentPoints.value.length > 1) {
+      if (colorShared.value !== '#ffffff' && currentPoints.value.length > 1) {
         const path = Skia.Path.Make();
         path.moveTo(currentPoints.value[0].x, currentPoints.value[0].y);
         for (let i = 1; i < currentPoints.value.length; i++) {
