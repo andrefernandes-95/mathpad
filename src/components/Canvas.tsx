@@ -32,7 +32,10 @@ const MathCanvas = forwardRef<CanvasHandle, Props>(({
   strokeWidth = 4
 }, ref) => {
   const [paths, setPaths] = useState<Stroke[]>([]);
-  const currentPath = useSharedValue<SkPath | null>(null);
+  
+  // We use a points array for the current stroke to ensure absolute reactivity.
+  // Mutating SkPath objects in place sometimes fails to trigger re-renders on Web.
+  const currentPoints = useSharedValue<{ x: number; y: number }[]>([]);
   const colorShared = useSharedValue(strokeColor);
   const widthShared = useSharedValue(strokeWidth);
   const canvasRef = useCanvasRef();
@@ -47,7 +50,7 @@ const MathCanvas = forwardRef<CanvasHandle, Props>(({
   useImperativeHandle(ref, () => ({
     clear: () => {
       setPaths([]);
-      currentPath.value = null;
+      currentPoints.value = [];
     },
     undo: () => {
       setPaths((prev) => prev.slice(0, -1));
@@ -62,8 +65,6 @@ const MathCanvas = forwardRef<CanvasHandle, Props>(({
     },
   }));
 
-  const ticker = useSharedValue(0);
-
   const addPath = (path: SkPath, color: string, width: number) => {
     setPaths((prev) => [...prev, { path, color, width }]);
   };
@@ -71,26 +72,23 @@ const MathCanvas = forwardRef<CanvasHandle, Props>(({
   const panGesture = Gesture.Pan()
     .onStart((g) => {
       console.log('Pan started at:', g.x, g.y);
-      const path = Skia.Path.Make();
-      path.moveTo(g.x, g.y);
-      currentPath.value = path;
-      ticker.value += 1;
+      currentPoints.value = [{ x: g.x, y: g.y }];
     })
     .onUpdate((g) => {
-      if (currentPath.value) {
-        currentPath.value.lineTo(g.x, g.y);
-        ticker.value += 1;
-      }
+      // Appending to the array triggers reactivity in useDerivedValue
+      currentPoints.value = [...currentPoints.value, { x: g.x, y: g.y }];
     })
     .onEnd(() => {
       console.log('Pan ended');
-      if (currentPath.value) {
-        // Need to copy the path before pushing to history to prevent future mutations
-        const finalPath = currentPath.value.copy();
-        runOnJS(addPath)(finalPath, colorShared.value, widthShared.value);
-        currentPath.value = null;
-        ticker.value += 1;
+      if (currentPoints.value.length > 1) {
+        const path = Skia.Path.Make();
+        path.moveTo(currentPoints.value[0].x, currentPoints.value[0].y);
+        for (let i = 1; i < currentPoints.value.length; i++) {
+          path.lineTo(currentPoints.value[i].x, currentPoints.value[i].y);
+        }
+        runOnJS(addPath)(path, colorShared.value, widthShared.value);
       }
+      currentPoints.value = [];
     })
     .minDistance(0)
     .activeCursor('crosshair');
@@ -114,10 +112,9 @@ const MathCanvas = forwardRef<CanvasHandle, Props>(({
             ))}
             {/* Render current stroke */}
             <CurrentStroke 
-              currentPath={currentPath} 
+              currentPoints={currentPoints} 
               colorShared={colorShared} 
               widthShared={widthShared}
-              ticker={ticker} 
             />
           </Canvas>
         </View>
@@ -127,12 +124,19 @@ const MathCanvas = forwardRef<CanvasHandle, Props>(({
 });
 
 // Optimization: separate component to isolate shared value updates
-const CurrentStroke = ({ currentPath, colorShared, widthShared, ticker }: any) => {
+const CurrentStroke = ({ currentPoints, colorShared, widthShared }: any) => {
   const path = useDerivedValue(() => {
-    // Accessing ticker.value makes this derived value depend on it
-    const _ = ticker.value;
-    return currentPath.value || Skia.Path.Make();
+    const points = currentPoints.value;
+    if (points.length < 2) return Skia.Path.Make();
+    
+    const p = Skia.Path.Make();
+    p.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      p.lineTo(points[i].x, points[i].y);
+    }
+    return p;
   });
+  
   const color = useDerivedValue(() => colorShared.value);
   const width = useDerivedValue(() => widthShared.value);
 
