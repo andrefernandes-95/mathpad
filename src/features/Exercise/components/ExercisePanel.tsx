@@ -1,41 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet, View, Image, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { Camera, Image as ImageIcon, X, RefreshCcw } from 'lucide-react-native';
 
-interface Props {
-  onImageSelected: (base64: string | null) => void;
+interface ExercisePanelProps {
   selectedImage: string | null;
+  onImageSelected: (base64: string | null) => void;
+  onPickImage: (fromCamera?: boolean) => Promise<string | null>;
+  isPicking: boolean;
 }
 
-export const ExercisePanel: React.FC<Props> = ({ onImageSelected, selectedImage }) => {
-  const [loading, setLoading] = useState(false);
-
-  const pickImage = async (fromCamera = false) => {
-    setLoading(true);
-    try {
-      const result = await (fromCamera 
-        ? ImagePicker.launchCameraAsync({
-            allowsEditing: true,
-            quality: 0.8,
-            base64: true,
-          })
-        : ImagePicker.launchImageLibraryAsync({
-            allowsEditing: true,
-            quality: 0.8,
-            base64: true,
-          }));
-
-      if (!result.canceled && result.assets[0].base64) {
-        onImageSelected(result.assets[0].base64);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+export const ExercisePanel: React.FC<ExercisePanelProps> = ({ 
+  selectedImage, 
+  onImageSelected, 
+  onPickImage,
+  isPicking 
+}) => {
   return (
     <View style={styles.container}>
       <View style={styles.glossyOverlay} />
@@ -51,8 +30,8 @@ export const ExercisePanel: React.FC<Props> = ({ onImageSelected, selectedImage 
           <View style={styles.buttonRow}>
             <TouchableOpacity 
               style={[styles.vistaButton, styles.primaryVista]} 
-              onPress={() => pickImage(true)}
-              disabled={loading}
+              onPress={() => onPickImage(true)}
+              disabled={isPicking}
             >
               <View style={styles.glossyOverlayInner} />
               <Camera color="#fff" size={18} />
@@ -61,15 +40,15 @@ export const ExercisePanel: React.FC<Props> = ({ onImageSelected, selectedImage 
 
             <TouchableOpacity 
               style={[styles.vistaButton, styles.secondaryVista]} 
-              onPress={() => pickImage(false)}
-              disabled={loading}
+              onPress={() => onPickImage(false)}
+              disabled={isPicking}
             >
               <View style={styles.glossyOverlayInner} />
               <ImageIcon color="#0369a1" size={18} />
               <Text style={[styles.buttonText, { color: '#0369a1' }]}>GALLERY</Text>
             </TouchableOpacity>
           </View>
-          {loading && <ActivityIndicator size="small" color="#0ea5e9" style={{ marginTop: 15 }} />}
+          {isPicking && <ActivityIndicator size="small" color="#0ea5e9" style={{ marginTop: 15 }} />}
         </View>
       ) : (
         <View style={styles.activeState}>
@@ -81,7 +60,7 @@ export const ExercisePanel: React.FC<Props> = ({ onImageSelected, selectedImage 
           <View style={styles.overlay}>
              <TouchableOpacity 
               style={styles.iconButton} 
-              onPress={() => pickImage(true)}
+              onPress={() => onPickImage(true)}
             >
                <View style={styles.glossyOverlayInner} />
                <RefreshCcw color="#fff" size={16} />
@@ -108,7 +87,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 350,
     backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    borderRadius: 0, // Fits card container
+    borderRadius: 0,
     overflow: 'hidden',
     justifyContent: 'center',
     position: 'relative',

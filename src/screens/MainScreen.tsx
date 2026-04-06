@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,38 +9,34 @@ import {
   Alert
 } from 'react-native';
 import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
-import { ExercisePanel } from '../components/ExercisePanel';
-import { CanvasToolbar } from '../components/CanvasToolbar';
-import { GeminiService } from '../services/gemini';
-import { Brain, Eraser, Undo2, ChevronUp, ChevronDown, CheckCircle2, Sparkles, X } from 'lucide-react-native';
-import Markdown from 'react-native-markdown-display';
-import MathCanvas, { CanvasHandle } from '../features/Canvas';
+import { Brain, Eraser, Undo2, Sparkles } from 'lucide-react-native';
 
-// In a real app, this would be in an environment variable or secure storage
-const TEMP_API_KEY = "AIzaSyAC4SuM9UbPTpz9jg4Dyvh_UFNpVnR-gEA";
+import MathCanvas, { CanvasHandle } from '../features/Canvas';
+import ExerciseFeature from '../features/Exercise';
+import { useTutor, AnalysisSheet } from '../features/Tutor';
+import { CanvasToolbar } from '../components/CanvasToolbar';
+import { CONFIG } from '../config';
 
 type Tab = 'exercise' | 'workspace';
 
 export const MainScreen = () => {
   const [activeTab, setActiveTab] = useState<Tab>('workspace');
   const [exerciseBase64, setExerciseBase64] = useState<string | null>(null);
-  const [analysis, setAnalysis] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [showAnalysis, setShowAnalysis] = useState(false);
+
+  // Feature Hooks
+  const { 
+    analysis, 
+    isAnalyzing, 
+    showAnalysis, 
+    analyze, 
+    closeAnalysis, 
+    hasGemini 
+  } = useTutor(CONFIG.GEMINI_API_KEY);
 
   // Canvas State
   const [strokeColor, setStrokeColor] = useState('#0f172a');
   const [strokeWidth, setStrokeWidth] = useState(4);
-
   const canvasRef = useRef<CanvasHandle>(null);
-
-  const gemini = useMemo(() => {
-    try {
-      return new GeminiService(TEMP_API_KEY);
-    } catch (e) {
-      return null;
-    }
-  }, []);
 
   const handleAnalyze = async () => {
     if (!exerciseBase64) {
@@ -49,30 +45,13 @@ export const MainScreen = () => {
       return;
     }
 
-    if (!gemini) {
-      Alert.alert("API Key Required", "Please set your Gemini API Key.");
-      return;
+    const workBase64 = await canvasRef.current?.getBase64();
+    const images = [exerciseBase64];
+    if (workBase64) {
+      images.push(workBase64);
     }
 
-    setIsAnalyzing(true);
-    setAnalysis(null);
-    setShowAnalysis(true);
-
-    try {
-      const workBase64 = await canvasRef.current?.getBase64();
-      const images = [exerciseBase64];
-      if (workBase64) {
-        images.push(workBase64);
-      }
-
-      const result = await gemini.analyzeExercise(images);
-      setAnalysis(result);
-    } catch (error: any) {
-      Alert.alert("Analysis Error", error.message || "Failed to analyze the exercise.");
-      setShowAnalysis(false);
-    } finally {
-      setIsAnalyzing(false);
-    }
+    await analyze(images);
   };
 
   return (
@@ -96,9 +75,9 @@ export const MainScreen = () => {
       </View>
 
       {/* API Key Warning */}
-      {!gemini && (
+      {!hasGemini && (
         <View style={styles.warningBanner}>
-          <Text style={styles.warningText}>⚠️ API Key missing in MainScreen.tsx</Text>
+          <Text style={styles.warningText}>⚠️ API Key missing or invalid in config.ts</Text>
         </View>
       )}
 
@@ -109,7 +88,7 @@ export const MainScreen = () => {
               <View style={styles.cardHeader}>
                 <Text style={styles.cardTitle}>Exercise Problem</Text>
               </View>
-              <ExercisePanel
+              <ExerciseFeature
                 selectedImage={exerciseBase64}
                 onImageSelected={setExerciseBase64}
               />
@@ -129,9 +108,9 @@ export const MainScreen = () => {
 
                 <View style={styles.actionRow}>
                   <TouchableOpacity
-                    style={[styles.analyzeSmallButton, (isAnalyzing || !exerciseBase64 || !gemini) && styles.disabledButton]}
+                    style={[styles.analyzeSmallButton, (isAnalyzing || !exerciseBase64 || !hasGemini) && styles.disabledButton]}
                     onPress={handleAnalyze}
-                    disabled={isAnalyzing || !exerciseBase64 || !gemini}
+                    disabled={isAnalyzing || !exerciseBase64 || !hasGemini}
                   >
                     <View style={styles.glossyOverlayInner} />
                     {isAnalyzing ? (
@@ -174,76 +153,21 @@ export const MainScreen = () => {
         )}
       </View>
 
-      {/* Vista Style Analysis Bottom Sheet */}
-      {showAnalysis && (
-        <View style={[styles.analysisSheet, analysis ? styles.sheetExpanded : styles.sheetCompact]}>
-          <View style={styles.glossyOverlay} />
-          <View style={styles.sheetHeader}>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Tutor Analysis</Text>
-            <TouchableOpacity onPress={() => setShowAnalysis(false)} style={styles.closeBtn}>
-              <X color="#fff" size={16} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.analysisContent} showsVerticalScrollIndicator={false}>
-            {isAnalyzing ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator color="#0ea5e9" size="large" />
-                <Text style={styles.loadingText}>Synthesizing through Vista Brain...</Text>
-              </View>
-            ) : (
-              <Markdown style={markdownStyles}>
-                {analysis}
-              </Markdown>
-            )}
-          </ScrollView>
-        </View>
-      )}
+      {/* Analysis Bottom Sheet */}
+      <AnalysisSheet 
+        showAnalysis={showAnalysis}
+        isAnalyzing={isAnalyzing}
+        analysis={analysis}
+        onClose={closeAnalysis}
+      />
     </SafeAreaView>
   );
-};
-
-const markdownStyles: any = {
-  body: {
-    fontSize: 15,
-    color: '#334155',
-    lineHeight: 22,
-  },
-  heading1: {
-    color: '#0369a1',
-    fontWeight: '800',
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  heading2: {
-    color: '#075985',
-    fontWeight: '700',
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  strong: {
-    fontWeight: '700',
-    color: '#0f172a',
-  },
-  paragraph: {
-    marginBottom: 8,
-  },
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#002a4e', // Deep Vista Blue
-  },
-  glossyOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '50%',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    zIndex: 1,
   },
   glossyOverlayInner: {
     position: 'absolute',
@@ -256,7 +180,7 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     paddingHorizontal: 15,
-    backgroundColor: '#002a4e', // Deep Vista Blue
+    backgroundColor: '#002a4e',
     paddingTop: 10,
   },
   tab: {
@@ -273,7 +197,7 @@ const styles = StyleSheet.create({
   activeTab: {
     backgroundColor: 'rgba(255,255,255,0.92)',
     borderBottomWidth: 0,
-    zIndex: 2, // Ensure it covers the top border of the content area
+    zIndex: 2,
   },
   tabText: {
     fontSize: 11,
@@ -288,7 +212,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(255,255,255,0.92)',
     marginHorizontal: 10,
-    marginTop: -1, // Pull up to meet the tabs
+    marginTop: -1,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
     borderTopLeftRadius: 0,
@@ -323,7 +247,7 @@ const styles = StyleSheet.create({
   handwritingTitleWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexShrink: 1, // Allow text to shrink if screen is tiny
+    flexShrink: 1,
   },
   handwritingTitle: {
     fontSize: 12,
@@ -421,65 +345,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
     fontStyle: 'italic',
-  },
-  analysisSheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(255,255,255,0.98)',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderWidth: 2,
-    borderColor: '#0ea5e9',
-    overflow: 'hidden',
-  },
-  sheetCompact: {
-    height: 250,
-  },
-  sheetExpanded: {
-    height: '75%',
-  },
-  sheetHeader: {
-    height: 50,
-    backgroundColor: '#0369a1',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    zIndex: 2,
-  },
-  sheetHandle: {
-    width: 40,
-    height: 5,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 3,
-    position: 'absolute',
-    top: 10,
-    left: '50%',
-    marginLeft: -20,
-  },
-  sheetTitle: {
-    color: '#fff',
-    fontWeight: '900',
-    fontSize: 16,
-  },
-  closeBtn: {
-    padding: 6,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 4,
-  },
-  analysisContent: {
-    padding: 20,
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    padding: 40,
-  },
-  loadingText: {
-    marginTop: 10,
-    color: '#0ea5e9',
-    fontWeight: '700',
+    marginBottom: 40,
   },
   warningBanner: {
     backgroundColor: '#fef3c7',
@@ -492,3 +358,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
+
