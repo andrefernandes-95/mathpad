@@ -87,7 +87,8 @@ export const MainScreen = () => {
       )}
 
       <View style={styles.content}>
-        {activeTab === 'exercise' ? (
+        {/* Persistent Exercise Tab */}
+        <View style={[styles.tabContent, activeTab !== 'exercise' && styles.hidden]}>
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.glassCard}>
               <View style={styles.cardHeader}>
@@ -102,7 +103,10 @@ export const MainScreen = () => {
               <Text style={styles.hintText}>Upload a problem then switch to Workspace to solve it.</Text>
             </View>
           </ScrollView>
-        ) : (
+        </View>
+
+        {/* Persistent Workspace Tab */}
+        <View style={[styles.tabContent, activeTab !== 'workspace' && styles.hidden]}>
           <View style={styles.workspaceWrapper}>
             <View style={styles.glassToolbar}>
               <View style={styles.handwritingHeader}>
@@ -155,7 +159,7 @@ export const MainScreen = () => {
               />
             </View>
           </View>
-        )}
+        </View>
       </View>
 
       {/* Analysis Bottom Sheet */}
@@ -361,6 +365,13 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#92400e',
     fontWeight: '700',
+  },
+  tabContent: {
+    flex: 1,
+    width: '100%',
+  },
+  hidden: {
+    display: 'none',
   },
 });
 

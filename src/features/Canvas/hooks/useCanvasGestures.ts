@@ -23,6 +23,8 @@ export const useCanvasGestures = ({
   addStroke,
 }: GestureOptions) => {
   const panGesture = Gesture.Pan()
+    .minPointers(1)
+    .maxPointers(1)
     .onStart((g) => {
       currentOpacity.value = 1;
       if (colorShared.value === '#ffffff') {
@@ -60,6 +62,7 @@ export const useCanvasGestures = ({
         });
       } else {
         currentPoints.value = [];
+        currentOpacity.value = 1;
       }
     })
     .minDistance(0)
