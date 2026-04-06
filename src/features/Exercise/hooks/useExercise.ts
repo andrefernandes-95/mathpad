@@ -1,13 +1,13 @@
 import { useState, useCallback } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 
-export const useExercise = (initialImage: string | null = null) => {
-  const [exerciseBase64, setExerciseBase64] = useState<string | null>(initialImage);
+export const useExercise = () => {
   const [isPicking, setIsPicking] = useState(false);
 
   const pickImage = useCallback(async (fromCamera = false) => {
     setIsPicking(true);
     try {
+      console.log('Picking image from:', fromCamera ? 'camera' : 'library');
       const options: ImagePicker.ImagePickerOptions = {
         allowsEditing: true,
         quality: 0.8,
@@ -18,9 +18,16 @@ export const useExercise = (initialImage: string | null = null) => {
         ? ImagePicker.launchCameraAsync(options)
         : ImagePicker.launchImageLibraryAsync(options));
 
-      if (!result.canceled && result.assets[0].base64) {
-        setExerciseBase64(result.assets[0].base64);
-        return result.assets[0].base64;
+      console.log('Picker result canceled:', result.canceled);
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        console.log('Asset received, base64 length:', asset.base64?.length || 0);
+        
+        if (asset.base64) {
+          return asset.base64;
+        } else {
+          console.warn('No base64 data found in asset');
+        }
       }
       return null;
     } catch (e) {
@@ -31,15 +38,8 @@ export const useExercise = (initialImage: string | null = null) => {
     }
   }, []);
 
-  const clearExercise = useCallback(() => {
-    setExerciseBase64(null);
-  }, []);
-
   return {
-    exerciseBase64,
     isPicking,
     pickImage,
-    clearExercise,
-    setExerciseBase64,
   };
 };

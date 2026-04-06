@@ -1,3 +1,3 @@
 export const CONFIG = {
-  GEMINI_API_KEY: "AIzaSyAC4SuM9UbPTpz9jg4Dyvh_UFNpVnR-gEA",
+  GEMINI_API_KEY: process.env.EXPO_PUBLIC_GEMINI_API_KEY || '',
 };

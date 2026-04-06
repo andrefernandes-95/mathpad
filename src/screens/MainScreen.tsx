@@ -21,7 +21,12 @@ type Tab = 'exercise' | 'workspace';
 
 export const MainScreen = () => {
   const [activeTab, setActiveTab] = useState<Tab>('workspace');
-  const [exerciseBase64, setExerciseBase64] = useState<string | null>(null);
+  const [exerciseBase64, setInternalExerciseBase64] = useState<string | null>(null);
+
+  const setExerciseBase64 = (val: string | null) => {
+    console.log('MainScreen: setExerciseBase64 called, size:', val?.length || 0);
+    setInternalExerciseBase64(val);
+  };
 
   // Feature Hooks
   const {

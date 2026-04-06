@@ -11,17 +11,25 @@ const ExerciseFeature: React.FC<ExerciseFeatureProps> = ({
   onImageSelected, 
   selectedImage 
 }) => {
-  const { isPicking, pickImage } = useExercise(selectedImage);
+  const { isPicking, pickImage } = useExercise();
 
-  const handleImageSelected = (base64: string | null) => {
-    onImageSelected(base64);
+  const handlePick = async (fromCamera?: boolean) => {
+    console.log('ExerciseFeature: handlePick called');
+    const result = await pickImage(fromCamera);
+    if (result) {
+      console.log('ExerciseFeature: Image picked, calling onImageSelected');
+      onImageSelected(result);
+    } else {
+      console.log('ExerciseFeature: pickImage returned null');
+    }
+    return result;
   };
 
   return (
     <ExercisePanel 
       selectedImage={selectedImage}
-      onImageSelected={handleImageSelected}
-      onPickImage={pickImage}
+      onImageSelected={onImageSelected}
+      onPickImage={handlePick}
       isPicking={isPicking}
     />
   );
