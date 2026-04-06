@@ -24,13 +24,13 @@ export const MainScreen = () => {
   const [exerciseBase64, setExerciseBase64] = useState<string | null>(null);
 
   // Feature Hooks
-  const { 
-    analysis, 
-    isAnalyzing, 
-    showAnalysis, 
-    analyze, 
-    closeAnalysis, 
-    hasGemini 
+  const {
+    analysis,
+    isAnalyzing,
+    showAnalysis,
+    analyze,
+    closeAnalysis,
+    hasGemini
   } = useTutor(CONFIG.GEMINI_API_KEY);
 
   // Canvas State
@@ -154,7 +154,7 @@ export const MainScreen = () => {
       </View>
 
       {/* Analysis Bottom Sheet */}
-      <AnalysisSheet 
+      <AnalysisSheet
         showAnalysis={showAnalysis}
         isAnalyzing={isAnalyzing}
         analysis={analysis}
