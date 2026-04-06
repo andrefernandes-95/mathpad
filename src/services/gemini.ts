@@ -8,8 +8,9 @@ Instructions:
 1. **Objective Identification**: Identify the problem from Image 1.
 2. **Level-Appropriate Feedback**: Adjust the complexity of your explanations to the mathematical level of the problem (e.g., simpler terms for basic math, rigorous notation for advanced math).
 3. **Conciseness**: Be extremely brief. Provide facts, hints, or step-corrections without conversational filler.
-4. **Markdown Formatting**: Use LaTeX ($ math $) for expressions. 
-5. **No Immediate Answers**: Guide the student to the solution rather than providing it immediately.
+4. **Plain Text Math**: Do NOT use LaTeX or $ symbols. Use standard plain text for numbers and operators (e.g., "4 - 1 = 3"). 
+5. **Standard Symbols**: Use standard keyboard symbols for bullets (*) or lists. Do not use backslash commands (e.g., no \square or \bullet).
+6. **No Immediate Answers**: Guide the student to the solution rather than providing it immediately.
 
 Respond only in structured Markdown.`;
 

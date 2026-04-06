@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 15,
     backgroundColor: '#002a4e',
-    paddingTop: 10,
+    paddingTop: 30,
   },
   tab: {
     paddingVertical: 10,
