@@ -1,14 +1,10 @@
 import { registerRootComponent } from 'expo';
-import { LoadSkiaWeb } from "@shopify/react-native-skia/lib/module/web";
+import { initSkia } from './src/initSkia';
 
-console.log("Loading Skia Web Engines...");
-
-LoadSkiaWeb({
-  locateFile: (file) => `https://unpkg.com/canvaskit-wasm@0.40.0/bin/full/${file}`
-}).then(() => {
-  console.log("Skia Web Initialized Successfully!");
+const startApp = () => {
   const App = require('./App').default;
   registerRootComponent(App);
-}).catch(err => {
-  console.error("Critical: Failed to load Skia Web Engine!", err);
-});
+};
+
+// This helps to properly initialize Skia on web, and is a no-op on native.
+initSkia().then(startApp);
