@@ -19,6 +19,7 @@ const MathCanvas = forwardRef<CanvasHandle, CanvasProps>(({
     canvasHeight,
     colorShared,
     widthShared,
+    currentOpacity,
     canvasRef,
     addStroke,
     eraseStrokeAt,
@@ -37,6 +38,7 @@ const MathCanvas = forwardRef<CanvasHandle, CanvasProps>(({
     colorShared,
     widthShared,
     currentPoints,
+    currentOpacity,
     checkBoundaries,
     eraseStrokeAt,
     addStroke,
@@ -80,6 +82,7 @@ const MathCanvas = forwardRef<CanvasHandle, CanvasProps>(({
             panGesture={panGesture}
             paths={paths}
             currentPoints={currentPoints}
+            currentOpacity={currentOpacity}
             colorShared={colorShared}
             widthShared={widthShared}
           />

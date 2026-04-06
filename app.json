@@ -28,9 +28,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-sqlite",
-      "@shopify/react-native-skia",
-      "react-native-reanimated"
+      "expo-sqlite"
     ],
     "extra": {
       "eas": {

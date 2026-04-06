@@ -13,6 +13,7 @@ interface DrawingAreaProps {
   panGesture: any;
   paths: Stroke[];
   currentPoints: { value: { x: number; y: number }[] };
+  currentOpacity: { value: number };
   colorShared: { value: string };
   widthShared: { value: number };
 }
@@ -23,6 +24,7 @@ export const DrawingArea: React.FC<DrawingAreaProps> = ({
   panGesture,
   paths,
   currentPoints,
+  currentOpacity,
   colorShared,
   widthShared,
 }) => {
@@ -33,6 +35,7 @@ export const DrawingArea: React.FC<DrawingAreaProps> = ({
           <StrokeRenderer paths={paths} />
           <CurrentStroke 
             currentPoints={currentPoints} 
+            currentOpacity={currentOpacity}
             colorShared={colorShared} 
             widthShared={widthShared}
           />

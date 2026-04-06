@@ -9,12 +9,12 @@ import {
   Alert
 } from 'react-native';
 import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
-import MathCanvas, { CanvasHandle } from '../components/Canvas';
 import { ExercisePanel } from '../components/ExercisePanel';
 import { CanvasToolbar } from '../components/CanvasToolbar';
 import { GeminiService } from '../services/gemini';
 import { Brain, Eraser, Undo2, ChevronUp, ChevronDown, CheckCircle2, Sparkles, X } from 'lucide-react-native';
 import Markdown from 'react-native-markdown-display';
+import MathCanvas, { CanvasHandle } from '../features/Canvas';
 
 // In a real app, this would be in an environment variable or secure storage
 const TEMP_API_KEY = "AIzaSyAC4SuM9UbPTpz9jg4Dyvh_UFNpVnR-gEA";
@@ -81,13 +81,13 @@ export const MainScreen = () => {
 
       {/* Tabs at the Top */}
       <View style={styles.tabContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tab, activeTab === 'exercise' && styles.activeTab]}
           onPress={() => setActiveTab('exercise')}
         >
           <Text style={[styles.tabText, activeTab === 'exercise' && styles.activeTabText]}>EXERCISE</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tab, activeTab === 'workspace' && styles.activeTab]}
           onPress={() => setActiveTab('workspace')}
         >
@@ -126,10 +126,10 @@ export const MainScreen = () => {
                   <Text style={styles.handwritingTitle}>HANDWRITING PAD</Text>
                   <Sparkles size={14} color="#0369a1" style={{ marginLeft: 5 }} />
                 </View>
-                
+
                 <View style={styles.actionRow}>
-                  <TouchableOpacity 
-                    style={[styles.analyzeSmallButton, (isAnalyzing || !exerciseBase64 || !gemini) && styles.disabledButton]} 
+                  <TouchableOpacity
+                    style={[styles.analyzeSmallButton, (isAnalyzing || !exerciseBase64 || !gemini) && styles.disabledButton]}
                     onPress={handleAnalyze}
                     disabled={isAnalyzing || !exerciseBase64 || !gemini}
                   >

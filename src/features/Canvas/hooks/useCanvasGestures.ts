@@ -1,5 +1,5 @@
 import { Gesture } from 'react-native-gesture-handler';
-import { runOnJS } from 'react-native-reanimated';
+import { runOnJS, withTiming } from 'react-native-reanimated';
 import { Skia } from '@shopify/react-native-skia';
 import { Stroke } from '../types';
 
@@ -7,6 +7,7 @@ interface GestureOptions {
   colorShared: { value: string };
   widthShared: { value: number };
   currentPoints: { value: { x: number; y: number }[] };
+  currentOpacity: { value: number };
   checkBoundaries: (x: number, y: number) => void;
   eraseStrokeAt: (x: number, y: number) => void;
   addStroke: (stroke: Stroke) => void;
@@ -16,12 +17,14 @@ export const useCanvasGestures = ({
   colorShared,
   widthShared,
   currentPoints,
+  currentOpacity,
   checkBoundaries,
   eraseStrokeAt,
   addStroke,
 }: GestureOptions) => {
   const panGesture = Gesture.Pan()
     .onStart((g) => {
+      currentOpacity.value = 1;
       if (colorShared.value === '#ffffff') {
         runOnJS(eraseStrokeAt)(g.x, g.y);
       } else {
@@ -48,8 +51,16 @@ export const useCanvasGestures = ({
           color: colorShared.value,
           width: widthShared.value,
         });
+
+        currentOpacity.value = withTiming(0, { duration: 150 }, (finished) => {
+          if (finished) {
+            currentPoints.value = [];
+            currentOpacity.value = 1;
+          }
+        });
+      } else {
+        currentPoints.value = [];
       }
-      currentPoints.value = [];
     })
     .minDistance(0)
     .activeOffsetX([-1, 1])

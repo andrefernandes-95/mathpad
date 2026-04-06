@@ -10,11 +10,12 @@ export const useCanvasState = (initialColor: string, initialWidth: number) => {
   // Dynamic Canvas Dimensions
   const canvasWidth = useSharedValue(INITIAL_SIZE);
   const canvasHeight = useSharedValue(INITIAL_SIZE);
-
   const currentPoints = useSharedValue<{ x: number; y: number }[]>([]);
   const colorShared = useSharedValue(initialColor);
   const widthShared = useSharedValue(initialWidth);
+  const currentOpacity = useSharedValue(1);
   const canvasRef = useCanvasRef();
+
 
   const addStroke = useCallback((stroke: Stroke) => {
     setPaths((prev) => [...prev, stroke]);
@@ -36,9 +37,10 @@ export const useCanvasState = (initialColor: string, initialWidth: number) => {
   const clear = useCallback(() => {
     setPaths([]);
     currentPoints.value = [];
+    currentOpacity.value = 1;
     canvasWidth.value = INITIAL_SIZE;
     canvasHeight.value = INITIAL_SIZE;
-  }, [currentPoints, canvasWidth, canvasHeight]);
+  }, [currentPoints, currentOpacity, canvasWidth, canvasHeight]);
 
   const undo = useCallback(() => {
     setPaths((prev) => prev.slice(0, -1));
@@ -63,6 +65,7 @@ export const useCanvasState = (initialColor: string, initialWidth: number) => {
     canvasHeight,
     colorShared,
     widthShared,
+    currentOpacity,
     canvasRef,
     addStroke,
     eraseStrokeAt,
